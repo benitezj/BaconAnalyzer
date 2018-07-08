@@ -7,7 +7,7 @@ using namespace baconhep;
 PhotonLoader::PhotonLoader(TTree *iTree) { 
   fPhotons  = new TClonesArray("baconhep::TPhoton");
   iTree->SetBranchAddress("Photon",       &fPhotons);
-  fPhotonBr  = iTree->GetBranch("Photon");
+  //fPhotonBr  = iTree->GetBranch("Photon");
   fN = 1;
   for(int i0 = 0; i0 < fN*3.; i0++) {double pVar = 0; fVars.push_back(pVar);}
 }
@@ -32,7 +32,7 @@ void PhotonLoader::setupTree(TTree *iTree) {
 }
 void PhotonLoader::load(int iEvent) { 
   fPhotons  ->Clear();
-  fPhotonBr ->GetEntry(iEvent);
+  //fPhotonBr ->GetEntry(iEvent);
 }
 void PhotonLoader::selectPhotons(double iRho,std::vector<TLorentzVector> &iVetoes,std::vector<TLorentzVector> &iPhotons) {
   reset();

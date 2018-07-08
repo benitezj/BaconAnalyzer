@@ -10,7 +10,7 @@ using namespace baconhep;
 ElectronLoader::ElectronLoader(TTree *iTree){
   fElectrons  = new TClonesArray("baconhep::TElectron");
   iTree->SetBranchAddress("Electron",       &fElectrons);
-  fElectronBr  = iTree->GetBranch("Electron");
+  //fElectronBr  = iTree->GetBranch("Electron");
   fN = 2;
 
   for(int i0 = 0; i0 < fN*3.; i0++) {double pVar = 0; fVars.push_back(pVar);}
@@ -43,7 +43,7 @@ void ElectronLoader::setupTree(TTree *iTree) {
 }
 void ElectronLoader::load(int iEvent) { 
   fElectrons  ->Clear();
-  fElectronBr ->GetEntry(iEvent);
+  //fElectronBr ->GetEntry(iEvent);
 }
 void ElectronLoader::selectElectrons(double iRho, double iMet, std::vector<TLorentzVector> &iElectrons) {
   reset();

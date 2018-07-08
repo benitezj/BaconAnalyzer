@@ -194,7 +194,7 @@ if options.passSumEntries:
     if options.list:
         with open(options.list.split(":")[1], 'r') as mylist:
             files = [(myfile.replace('\n', ''), True) for myfile in mylist.readlines()]
-        # print files
+
         for fi in files:
             tf = r.TFile.Open(fi[0])
             try:

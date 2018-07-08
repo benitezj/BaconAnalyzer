@@ -7,7 +7,7 @@ using namespace baconhep;
 TauLoader::TauLoader(TTree *iTree) { 
   fTaus  = new TClonesArray("baconhep::TTau");
   iTree->SetBranchAddress("Tau",       &fTaus);
-  fTauBr  = iTree->GetBranch("Tau");
+  //fTauBr  = iTree->GetBranch("Tau");
   fN = 1;
 }
 TauLoader::~TauLoader() { 
@@ -25,7 +25,7 @@ void TauLoader::setupTree(TTree *iTree) {
 }
 void TauLoader::load(int iEvent) { 
   fTaus   ->Clear();
-  fTauBr ->GetEntry(iEvent);
+  //fTauBr ->GetEntry(iEvent);
 }
 void TauLoader::selectTaus(std::vector<TLorentzVector> &iElectrons, std::vector<TLorentzVector> &iMuons) {
   reset(); 

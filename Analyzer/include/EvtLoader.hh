@@ -6,6 +6,7 @@
 #include "TH1F.h"
 #include "TH2D.h"
 #include "TTree.h"
+#include "TChain.h"
 #include "TBranch.h"
 #include "TClonesArray.h"
 #include "TLorentzVector.h"
@@ -17,7 +18,7 @@ using namespace baconhep;
 
 class EvtLoader { 
 public:
-  EvtLoader(TTree *iTree,std::string iName,
+  EvtLoader(TChain *iTree,std::string iName,
 	    std::string iHLTFile="${CMSSW_BASE}/src/BaconAnalyzer/Analyzer/data/HLTFile_25ns",
 	    std::string iPUWeight="${CMSSW_BASE}/src/BaconAnalyzer/Analyzer/data/puWeights_Jan11.root");
   ~EvtLoader(); 

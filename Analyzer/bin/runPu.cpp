@@ -20,10 +20,12 @@ EvtLoader       *fEvt        = 0;
 TH1F *fHist                  = 0;
 
 // Load tree and return infile
-TTree* load(std::string iName) { 
+TChain* load(std::string iName) { 
   TFile *lFile = TFile::Open(iName.c_str());
-  TTree *lTree = (TTree*) lFile->FindObjectAny("Events");
+  //TTree *lTree = (TTree*) lFile->FindObjectAny("Events");
   fHist        = (TH1F* ) lFile->FindObjectAny("TotalEvents");
+  TChain * lTree =new TChain("Events");
+  lTree->Add(iName.c_str());
   return lTree;
 }
 
@@ -47,7 +49,7 @@ int main( int argc, char **argv ) {
     lJson.replace(start_pos, cmssw_base_env.length(), cmssw_base);
   }
 
-  TTree *lTree = load(lName); 
+  TChain *lTree = load(lName); 
 
   fEvt       = new EvtLoader     (lTree,lName);    
   if(lOption.compare("data")!=0) fGen      = new GenLoader     (lTree);    

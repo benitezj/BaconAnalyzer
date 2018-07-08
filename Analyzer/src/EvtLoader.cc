@@ -6,7 +6,7 @@
 
 using namespace baconhep;
 
-EvtLoader::EvtLoader(TTree *iTree,std::string iName,std::string iHLTFile,std::string iPUWeight) { 
+EvtLoader::EvtLoader(TChain *iTree,std::string iName,std::string iHLTFile,std::string iPUWeight) { 
   const std::string cmssw_base = getenv("CMSSW_BASE");
   std::string cmssw_base_env = "${CMSSW_BASE}";
   size_t start_pos = iHLTFile.find(cmssw_base_env);
@@ -16,13 +16,14 @@ EvtLoader::EvtLoader(TTree *iTree,std::string iName,std::string iHLTFile,std::st
 
   fEvt      = new TEventInfo();
   iTree->SetBranchAddress("Info",       &fEvt);
-  fEvtBr    = iTree->GetBranch("Info");
+  //fEvtBr    = iTree->GetBranch("Info");
+  
   std::cout << "trigger file " << iHLTFile << std::endl;
   fTrigger  = new TTrigger(iHLTFile);
   
   fVertices = new TClonesArray("baconhep::TVertex");
   iTree->SetBranchAddress("PV",       &fVertices);
-  fVertexBr     = iTree->GetBranch("PV");
+  //fVertexBr     = iTree->GetBranch("PV");
   
   TFile *lFile = TFile::Open(iPUWeight.c_str()); 
   fPUWeightHist =  (TH1F*) lFile->Get("puw");
@@ -92,11 +93,11 @@ void EvtLoader::setupTree(TTree *iTree) {
   fPassJson = 0;
 }
 void EvtLoader::load(int iEvent) { 
-  fVertices ->Clear();
-  fEvtBr    ->GetEntry(iEvent);
-  fVertexBr ->GetEntry(iEvent);
-  fTrigString.clear();
-  fRun   = fEvt->runNum;
+  fVertices ->Clear(); 
+  //fEvtBr    ->GetEntry(iEvent);
+  //fVertexBr ->GetEntry(iEvent);
+  fTrigString.clear(); 
+  fRun   = fEvt->runNum; 
   fLumi  = fEvt->lumiSec;
   fPu    = fEvt->nPUmean;
 }

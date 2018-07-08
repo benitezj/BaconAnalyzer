@@ -22,9 +22,12 @@
 #include "TROOT.h"
 #include "TFile.h"
 #include "TTree.h"
+#include "TChain.h"
 #include <TError.h>
 #include <string>
 #include <iostream>
+#include <fstream>
+
 
 // Object Processors
 GenLoader       *fGen        = 0; 
@@ -38,21 +41,46 @@ VJetLoader      *fVJet8      = 0;
 VJetLoader      *fVJet15     = 0;
 RunLumiRangeMap *fRangeMap   = 0; 
 
-TH1F *fHist                  = 0;
+const float PTCUT = 400;
 
 
-const int NUM_PDF_WEIGHTS = 60;
+TChain* loadChain(std::string inputFile, unsigned int firstfile, unsigned int lastfile) { 
 
-// Load tree and return infile
-TChain* load(std::string iName) { 
-  TFile *lFile = TFile::Open(iName.c_str());
-  //TTree *lTree = (TTree*) lFile->FindObjectAny("Events");
-  fHist        = (TH1F* ) lFile->FindObjectAny("TotalEvents");
+  std::ifstream infile(inputFile.c_str());
+  if(! infile.is_open()){
+    std::cout<<"failed to open input file list:"<< inputFile.c_str()<<std::endl;
+    return NULL;
+  }
 
-  TChain * lTree=new TChain("Events");
-  lTree->Add(iName.c_str());
+  TChain * lTree=new TChain("Events"); 
+  std::string line;
+  unsigned int counterInput=0;
+  while (std::getline(infile, line)){
+    counterInput++;
+    
+    if(counterInput>=firstfile && counterInput<=lastfile){
+      
+      //cout<<line<<endl;
+      TFile *lFile = TFile::Open(line.c_str());
+      if(lFile->IsZombie()){
+	std::cout<<"failed to open root file "<<line.c_str()<<std::endl;
+	return NULL;
+      }
+
+      TTree *lT = (TTree*) lFile->FindObjectAny("Events");
+      if(lT==NULL){
+	std::cout<<"failed to get Tree from "<<line.c_str()<<std::endl;
+	return NULL;
+      }
+      
+      std::cout<<line.c_str()<<std::endl;
+      lTree->Add(line.c_str());
+    }
+  }
+
   return lTree;
 }
+
 
 // For Json 
 bool passEvent(unsigned int iRun,unsigned int iLumi) { 
@@ -62,33 +90,38 @@ bool passEvent(unsigned int iRun,unsigned int iLumi) {
 
 // === MAIN =======================================================================================================
 int main( int argc, char **argv ) {
-  gROOT->ProcessLine("#include <vector>");
-  const std::string lName        = argv[1];
-  const std::string lOption      = argv[2];
-  const std::string lJSON        = argv[3];
-  const double      lXS          = atof(argv[4]);
-  //const double      weight       = atof(argv[5]);
-  const int      iSplit          = atoi(argv[6]);
-  const int      maxSplit        = atoi(argv[7]);
+  gROOT->ProcessLine("#include <vector>");//why is this here?
+  const int      firstfile       = atoi(argv[1]);
+  const int      lastfile        = atoi(argv[2]);
+  const std::string lName        = argv[3]; //input file (w.r.t. src/  dir)
 
-  std::string lJson="${CMSSW_BASE}/src/BaconAnalyzer/Analyzer/data/";
-  lJson.append(lJSON);
-  const std::string cmssw_base = getenv("CMSSW_BASE");
-  std::string cmssw_base_env = "${CMSSW_BASE}";
-  size_t start_pos = lJson.find(cmssw_base_env);
-  if(start_pos != std::string::npos) {
-    lJson.replace(start_pos, cmssw_base_env.length(), cmssw_base);
-  }
+  std::string cmssw=getenv("CMSSW_BASE");
 
+  bool isData=false;
+  if(lName.find("Run20")!=std::string::npos) isData = true;
+  
+
+  ///set the json for data
   fRangeMap = new RunLumiRangeMap();
-  std::cout << "json " << lJson << std::endl;
-  if(lJSON.size() > 0) fRangeMap->AddJSONFile(lJson.c_str());
+  if(isData ){
+    std::string lJson=cmssw;
+    lJson.append("/src/BaconAnalyzer/Analyzer/data/"); 
+    if(lName.find("Run2016")!=std::string::npos) lJson.append("Cert_271036-284044_13TeV_23Sep2016ReReco_Collisions16_JSON.txt");
+    else if(lName.find("Run2017")!=std::string::npos) lJson.append("Cert_294927-306462_13TeV_EOY2017ReReco_Collisions17_JSON.txt");
+    else {std::cout<<" no json"<<std::endl; return 0;}
+    std::cout << "json " << lJson << std::endl;
+    fRangeMap->AddJSONFile(lJson.c_str());
+  }
+  
 
-  bool isData;
-  if(lOption.compare("data")!=0) isData = false;
-  else isData = true;
-				   
-  TChain *lTree = load(lName); 
+
+  //////get the input
+  std::string linput=cmssw;
+  linput.append("/src/");
+  linput.append(lName);//lName must be w.r.t. src/
+  TChain *lTree = loadChain(lName,firstfile,lastfile); 
+
+
   // Declare Readers 
   fEvt       = new EvtLoader     (lTree,lName);    
   fMuon      = new MuonLoader    (lTree);          
@@ -98,19 +131,22 @@ int main( int argc, char **argv ) {
   fJet4      = new JetLoader     (lTree, isData);  
   fVJet8     = new VJetLoader    (lTree,"AK8Puppi","AddAK8Puppi",3, isData);  
   fVJet15    = new VJetLoader    (lTree,"CA15Puppi","AddCA15Puppi",3, isData);
-  if(lOption.compare("data")!=0) fGen      = new GenLoader     (lTree);                 
+  fGen       = new GenLoader     (lTree);                 
 
+
+  // Output file and tree
   TFile *lFile = TFile::Open("Output.root","RECREATE");
-  TTree *lOut  = new TTree("Events","Events");
+  gROOT->cd();
 
   //Setup histograms containing total number of processed events (for normalization)
   TH1F *NEvents = new TH1F("NEvents", "NEvents", 1, 0.5, 1.5);
   TH1F *SumWeights = new TH1F("SumWeights", "SumWeights", 1, 0.5, 1.5);
   TH1F *SumScaleWeights = new TH1F("SumScaleWeights", "SumScaleWeights", 6, -0.5, 5.5);
-  TH1F *SumPdfWeights = new TH1F("SumPdfWeights", "SumPdfWeights", NUM_PDF_WEIGHTS, -0.5, NUM_PDF_WEIGHTS-0.5);
   
-    
+
   // Setup Tree
+  TTree *lOut  = new TTree("Events","Events");
+  lOut->SetDirectory(lFile);
   fEvt      ->setupTree      (lOut); 
   fVJet8    ->setupTree      (lOut,"AK8Puppijet"); 
   fVJet8    ->setupTreeZprime(lOut,"AK8Puppijet");
@@ -121,32 +157,33 @@ int main( int argc, char **argv ) {
   fElectron ->setupTree      (lOut); 
   fTau      ->setupTree      (lOut); 
   fPhoton   ->setupTree      (lOut); 
-  if(lOption.compare("data")!=0) fGen ->setupTree (lOut,float(lXS));
+  if(isData==false) fGen ->setupTree (lOut,1.);
+
 
   // Loop over events i0 = iEvent
   int neventstest = 0;
-  int neventsTotal = int(lTree->GetEntriesFast());
-  std::cout << maxSplit << std::endl;
-  int minEventsPerJob = neventsTotal / maxSplit;
-  //int leftoverEvents = neventsTotal % maxSplit;
-  int minEvent = iSplit * minEventsPerJob;
-  int maxEvent = (iSplit+1) * minEventsPerJob;
-  if (iSplit + 1 == maxSplit) maxEvent = neventsTotal;
-  std::cout << neventsTotal << " total events" << std::endl;
-  std::cout << iSplit << " iSplit " << std::endl;
-  std::cout << maxSplit << " maxSplit " << std::endl;
-  std::cout << minEvent << " min event" << std::endl;
-  std::cout << maxEvent << " max event" << std::endl;  
-  for(int i0 = minEvent; i0 < maxEvent; i0++) {
-    //for(int i0 = 0; i0 < int(10000); i0++){ // for testing
-    if (i0%1000 == 0) std::cout << i0 << " events processed " << std::endl;
-    // Check GenInfo
+  unsigned int totalEvents = lTree->GetEntries();
+  for(unsigned int i0 = 0; i0 < totalEvents; i0++) {
+    if (i0%1000 == 0) std::cout << i0 <<"/"<<totalEvents<< " events processed " << std::endl;
+
+    ///load all branches
     fEvt->load(i0);
+    if(isData==false) fGen->load(i0);
+    fMuon     ->load(i0);
+    fElectron ->load(i0);
+    fTau      ->load(i0);
+    fPhoton   ->load(i0);
+    fVJet15   ->load(i0);
+    fVJet8    ->load(i0);
+    fJet4     ->load(i0);
+ 
+    lTree->GetEntry(i0);
+    
+    // Check GenInfo
     float lWeight = 1;
     unsigned int passJson = 0;
-    if(lOption.compare("data")!=0){
-      fGen->load(i0);
-      //lWeight = (float(lXS)*1000.*fGen->fWeight)/weight;
+    if(isData==false){
+      //fGen->load(i0);
       lWeight = fGen->fWeight;
       passJson = 1;
     }
@@ -163,7 +200,7 @@ int main( int argc, char **argv ) {
     
     // Triggerbits
     unsigned int trigbits=1;   
-    if(lOption.find("data")!=std::string::npos){
+    if(isData){
       if(
 	 fEvt ->passTrigger("HLT_AK8PFJet400_TrimMass30_v*") ||
 	 fEvt ->passTrigger("HLT_AK8PFJet420_TrimMass30_v*") ||
@@ -243,22 +280,16 @@ int main( int argc, char **argv ) {
     // Objects
     gErrorIgnoreLevel=kError;
     std::vector<TLorentzVector> cleaningMuons, cleaningElectrons, cleaningPhotons; 
-    fMuon     ->load(i0);
     fMuon     ->selectMuons(cleaningMuons,fEvt->fMet,fEvt->fMetPhi);
-    fElectron ->load(i0);
     fElectron ->selectElectrons(fEvt->fRho,fEvt->fMet,cleaningElectrons);
-    fTau      ->load(i0);
     fTau      ->selectTaus(cleaningElectrons, cleaningMuons);
-    fPhoton   ->load(i0);
     fPhoton   ->selectPhotons(fEvt->fRho,cleaningElectrons,cleaningPhotons);
         
     // CA15Puppi Jets
-    fVJet15   ->load(i0);
     fVJet15   ->selectVJets(cleaningElectrons,cleaningMuons,cleaningPhotons,1.5,fEvt->fRho,fEvt->fRun);
     if(fVJet15->selectedVJets.size()>0) fEvt->fselectBits =  fEvt->fselectBits | 4;
       
     // AK8Puppi Jets    
-    fVJet8    ->load(i0);
     fVJet8    ->selectVJets(cleaningElectrons,cleaningMuons,cleaningPhotons,0.8,fEvt->fRho,fEvt->fRun);
     if(fVJet8->selectedVJets.size()>0) fEvt->fselectBits =  fEvt->fselectBits | 2;
 
@@ -266,12 +297,11 @@ int main( int argc, char **argv ) {
     if(fVJet8->selectedVJets.size()>0) fVJet8 ->matchJet15(fVJet15->selectedVJets,fVJet8->selectedVJets[0],0.4);
     
     // AK4Puppi Jets
-    fJet4     ->load(i0); 
     fJet4     ->selectJets(cleaningElectrons,cleaningMuons,cleaningPhotons,fVJet8->selectedVJets,fEvt->fRho,fEvt->fRun);
 
     // Select at least one AK8 or one CA15 jet
     if(!(fEvt->fselectBits & 2) || !(fEvt->fselectBits & 4)) continue;
-    if((fVJet8->selectedVJets[0].Pt() < 200) || (fVJet15->selectedVJets[0].Pt() < 200)) continue;
+    if((fVJet8->selectedVJets[0].Pt() < PTCUT) || (fVJet15->selectedVJets[0].Pt() < PTCUT)) continue;
 
     // TTbar, EWK and kFactor correction
     if(lName.find("ZJets")!=std::string::npos || lName.find("DYJets")!=std::string::npos){
@@ -322,13 +352,16 @@ int main( int argc, char **argv ) {
     lOut->Fill();
     neventstest++;
   }
-  std::cout << neventstest << std::endl;
-  std::cout << lTree->GetEntriesFast() << std::endl;
+
+
   lFile->cd();
   lOut->Write();  
   NEvents->Write();
   SumWeights->Write();
   SumScaleWeights->Write();
-  SumPdfWeights->Write();
+  lFile->ls();
   lFile->Close();
+
+
+  std::cout <<"SelectedEvents : "<< neventstest << std::endl;
 }

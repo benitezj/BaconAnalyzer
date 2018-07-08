@@ -44,10 +44,12 @@ TH1F *fHist                  = 0;
 const int NUM_PDF_WEIGHTS = 60;
 
 // Load tree and return infile
-TTree* load(std::string iName) { 
+TChain* load(std::string iName) { 
   TFile *lFile = TFile::Open(iName.c_str());
-  TTree *lTree = (TTree*) lFile->FindObjectAny("Events");
+  //TTree *lTree = (TTree*) lFile->FindObjectAny("Events");
   fHist        = (TH1F* ) lFile->FindObjectAny("TotalEvents");
+  TChain * lTree =new TChain("Events");
+  lTree->Add(iName.c_str());
   return lTree;
 }
 
@@ -75,7 +77,7 @@ int main( int argc, char **argv ) {
   if(lOption.compare("data")!=0) isData = false;
   else isData = true;
 				   
-  TTree *lTree = load(lName); 
+  TChain *lTree = load(lName); 
   // Declare Readers 
   fEvt       = new EvtLoader     (lTree,lName);                                             // fEvt, fEvtBr, fVertices, fVertexBr
   fMuon      = new MuonLoader    (lTree);                                                   // fMuon and fMuonBr, fN = 2 - muonArr and muonBr

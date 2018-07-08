@@ -14,8 +14,8 @@ VJetLoader::VJetLoader(TTree *iTree,std::string iJet,std::string iAddJet,int iN,
   iTree->SetBranchAddress(iJet.c_str(),       &fVJets);
   iTree->SetBranchAddress(iAddJet.c_str(),    &fVAddJets);
 
-  fVJetBr        = iTree->GetBranch(iJet.c_str());
-  fVAddJetBr     = iTree->GetBranch(iAddJet.c_str());
+  //fVJetBr        = iTree->GetBranch(iJet.c_str());
+  //fVAddJetBr     = iTree->GetBranch(iAddJet.c_str());
 
   fN = iN;
 
@@ -197,9 +197,9 @@ void VJetLoader::setupTreeZprime(TTree *iTree, std::string iJetLabel) {
 }
 void VJetLoader::load(int iEvent) { 
   fVJets       ->Clear();
-  fVJetBr      ->GetEntry(iEvent);
+  //fVJetBr      ->GetEntry(iEvent);
   fVAddJets    ->Clear();
-  fVAddJetBr   ->GetEntry(iEvent);
+  //fVAddJetBr   ->GetEntry(iEvent);
 }
 void VJetLoader::selectVJets(std::vector<TLorentzVector> &iElectrons, std::vector<TLorentzVector> &iMuons, std::vector<TLorentzVector> &iPhotons, double dR, double iRho, unsigned int runNum,bool iHWW){
   reset();  

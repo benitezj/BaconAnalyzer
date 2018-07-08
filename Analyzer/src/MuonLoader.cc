@@ -10,7 +10,7 @@ using namespace baconhep;
 MuonLoader::MuonLoader(TTree *iTree) { 
   fMuons  = new TClonesArray("baconhep::TMuon");
   iTree->SetBranchAddress("Muon",       &fMuons);
-  fMuonBr  = iTree->GetBranch("Muon");
+  //fMuonBr  = iTree->GetBranch("Muon");
   fN = 2;
 
   for(int i0 = 0; i0 < fN*3.; i0++) {double pVar = 0; fVars.push_back(pVar);}
@@ -46,7 +46,7 @@ void MuonLoader::setupTree(TTree *iTree) {
 }
 void MuonLoader::load(int iEvent) { 
   fMuons  ->Clear();
-  fMuonBr ->GetEntry(iEvent);
+  //fMuonBr ->GetEntry(iEvent);
 }
 void MuonLoader::selectMuons(std::vector<TLorentzVector> &iMuons, float met, float metPhi) {
   reset(); 

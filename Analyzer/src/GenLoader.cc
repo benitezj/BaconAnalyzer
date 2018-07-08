@@ -10,11 +10,11 @@ using namespace baconhep;
 GenLoader::GenLoader(TTree *iTree) { 
   fGenInfo  = new TGenEventInfo();
   iTree->SetBranchAddress("GenEvtInfo",       &fGenInfo);
-  fGenInfoBr  = iTree->GetBranch("GenEvtInfo");
+  //fGenInfoBr  = iTree->GetBranch("GenEvtInfo");
 
   fGens  = new TClonesArray("baconhep::TGenParticle");
   iTree->SetBranchAddress("GenParticle",       &fGens);
-  fGenBr  = iTree->GetBranch("GenParticle");
+  //fGenBr  = iTree->GetBranch("GenParticle");
 
 }
 GenLoader::~GenLoader() { 
@@ -122,8 +122,8 @@ void GenLoader::setupTreeHiggs(TTree *iTree) {
 void GenLoader::load(int iEvent) { 
   reset();
   fGens     ->Clear();
-  fGenBr    ->GetEntry(iEvent);
-  fGenInfoBr->GetEntry(iEvent);
+  //fGenBr    ->GetEntry(iEvent);
+  //fGenInfoBr->GetEntry(iEvent);
 
   fWeight = fGenInfo->weight;
 }

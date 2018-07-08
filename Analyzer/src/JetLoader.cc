@@ -8,7 +8,7 @@ using namespace baconhep;
 JetLoader::JetLoader(TTree *iTree, bool iData) { 
   fJets  = new TClonesArray("baconhep::TJet");
   iTree->SetBranchAddress("AK4Puppi",       &fJets);
-  fJetBr = iTree->GetBranch("AK4Puppi");
+  //fJetBr = iTree->GetBranch("AK4Puppi");
 
   //fJetsCHS  = new TClonesArray("baconhep::TJet");
   //iTree->SetBranchAddress("AK4CHS",       &fJetsCHS);
@@ -191,7 +191,7 @@ void JetLoader::setupTree(TTree *iTree, std::string iJetLabel) {
 }
 void JetLoader::load(int iEvent) { 
   fJets   ->Clear();
-  fJetBr ->GetEntry(iEvent);
+  //fJetBr ->GetEntry(iEvent);
 }
 void JetLoader::selectJets(std::vector<TLorentzVector> &iElectrons, std::vector<TLorentzVector> &iMuons, std::vector<TLorentzVector> &iPhotons, std::vector<TLorentzVector> &iVJets, double iRho, unsigned int runNum){
   reset(); 
