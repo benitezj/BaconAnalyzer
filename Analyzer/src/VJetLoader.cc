@@ -36,16 +36,16 @@ VJetLoader::VJetLoader(TTree *iTree,std::string iJet,std::string iAddJet,int iN,
 }
 VJetLoader::~VJetLoader() { 
   delete fVJets;
-  delete fVJetBr;
+  //delete fVJetBr;
   delete fVAddJets;
-  delete fVAddJetBr;
+  //delete fVAddJetBr;
 }
 void VJetLoader::reset() { 
   fNLooseVJets        = 0;
   fNTightVJets        = 0;  
   for(int i0 = 0; i0 < int(fisTightVJet.size()); i0++) fisTightVJet[i0] = -999;
   for(int i0 = 0; i0 < int(fisMatchedVJet.size()); i0++) fisMatchedVJet[i0] = -999;
-  selectedVJets.clear();
+  //selectedVJets.clear();
   fLooseVJets.clear();
   x1List.clear();
   x2List.clear();
@@ -196,9 +196,9 @@ void VJetLoader::setupTreeZprime(TTree *iTree, std::string iJetLabel) {
   fTree->Branch(pSratio.str().c_str() ,&fRatioPt          ,(pSratio.str()+"/D").c_str());
 }
 void VJetLoader::load(int iEvent) { 
-  fVJets       ->Clear();
+  //fVJets       ->Clear();
   //fVJetBr      ->GetEntry(iEvent);
-  fVAddJets    ->Clear();
+  //fVAddJets    ->Clear();
   //fVAddJetBr   ->GetEntry(iEvent);
 }
 void VJetLoader::selectVJets(std::vector<TLorentzVector> &iElectrons, std::vector<TLorentzVector> &iMuons, std::vector<TLorentzVector> &iPhotons, double dR, double iRho, unsigned int runNum,bool iHWW){
@@ -229,36 +229,37 @@ void VJetLoader::selectVJets(std::vector<TLorentzVector> &iElectrons, std::vecto
     double x2 = r->Gaus();
     double x3 = r->Gaus();
     double jetEnergySmearFactor = 1.0; 
-    double jetEnergySmearFactorUp = 1.0; 
-    double jetEnergySmearFactorDown = 1.0;    
+    //double jetEnergySmearFactorUp = 1.0; 
+    //double jetEnergySmearFactorDown = 1.0;    
     if (!isData) {      
       jetEnergySmearFactor = 1.0 + sqrt(sf*sf - 1.0)*sigma_MC*x1;
-      jetEnergySmearFactorUp = 1.0 + sqrt(sfUp*sfUp - 1.0)*sigma_MC*x2;
-      jetEnergySmearFactorDown = 1.0 + sqrt(sfDown*sfDown - 1.0)*sigma_MC*x3;
+      //jetEnergySmearFactorUp = 1.0 + sqrt(sfUp*sfUp - 1.0)*sigma_MC*x2;
+      //jetEnergySmearFactorDown = 1.0 + sqrt(sfDown*sfDown - 1.0)*sigma_MC*x3;
     }    
-    double unc = getJecUnc( jetCorrPt, pVJet->eta, runNum ); //use run=999 as default
+    //double unc = getJecUnc( jetCorrPt, pVJet->eta, runNum ); //use run=999 as default
     
     double jetCorrPtSmear = jetCorrPt*jetEnergySmearFactor;
-    double jetPtJESUp = jetCorrPt*jetEnergySmearFactor*(1+unc);
-    double jetPtJESDown = jetCorrPt*jetEnergySmearFactor/(1+unc);
-    double jetPtJERUp = jetCorrPt*jetEnergySmearFactorUp;
-    double jetPtJERDown = jetCorrPt*jetEnergySmearFactorDown;
+    // double jetPtJESUp = jetCorrPt*jetEnergySmearFactor*(1+unc);
+    // double jetPtJESDown = jetCorrPt*jetEnergySmearFactor/(1+unc);
+    // double jetPtJERUp = jetCorrPt*jetEnergySmearFactorUp;
+    // double jetPtJERDown = jetCorrPt*jetEnergySmearFactorDown;
     
-    double jetCorrESmear = jetCorrE*jetEnergySmearFactor*(1+unc);    
-    double jetEJESUp = jetCorrE*jetEnergySmearFactor*(1+unc);
-    double jetEJESDown = jetCorrE*jetEnergySmearFactor/(1+unc);
-    double jetEJERUp = jetCorrE*jetEnergySmearFactorUp;
-    double jetEJERDown = jetCorrE*jetEnergySmearFactorDown;
+    //double jetCorrESmear = jetCorrE*jetEnergySmearFactor*(1+unc);    
+    // double jetEJESUp = jetCorrE*jetEnergySmearFactor*(1+unc);
+    // double jetEJESDown = jetCorrE*jetEnergySmearFactor/(1+unc);
+    // double jetEJERUp = jetCorrE*jetEnergySmearFactorUp;
+    // double jetEJERDown = jetCorrE*jetEnergySmearFactorDown;
     
-    TLorentzVector thisJet;  thisJet.SetPtEtaPhiE(jetCorrPtSmear, pVJet->eta, pVJet->phi, jetCorrESmear);
-    TLorentzVector thisJetJESUp;  thisJetJESUp.SetPtEtaPhiE(jetPtJESUp, pVJet->eta, pVJet->phi, jetEJESUp);
-    TLorentzVector thisJetJESDown; thisJetJESDown.SetPtEtaPhiE(jetPtJESDown, pVJet->eta, pVJet->phi, jetEJESDown);
-    TLorentzVector thisJetJERUp;  thisJetJERUp.SetPtEtaPhiE(jetPtJERUp,  pVJet->eta, pVJet->phi, jetEJERUp);
-    TLorentzVector thisJetJERDown; thisJetJERDown.SetPtEtaPhiE(jetPtJERDown,  pVJet->eta, pVJet->phi, jetEJERDown);
+    // TLorentzVector thisJet;  thisJet.SetPtEtaPhiE(jetCorrPtSmear, pVJet->eta, pVJet->phi, jetCorrESmear);
+    // TLorentzVector thisJetJESUp;  thisJetJESUp.SetPtEtaPhiE(jetPtJESUp, pVJet->eta, pVJet->phi, jetEJESUp);
+    // TLorentzVector thisJetJESDown; thisJetJESDown.SetPtEtaPhiE(jetPtJESDown, pVJet->eta, pVJet->phi, jetEJESDown);
+    // TLorentzVector thisJetJERUp;  thisJetJERUp.SetPtEtaPhiE(jetPtJERUp,  pVJet->eta, pVJet->phi, jetEJERUp);
+    // TLorentzVector thisJetJERDown; thisJetJERDown.SetPtEtaPhiE(jetPtJERDown,  pVJet->eta, pVJet->phi, jetEJERDown);
     
     if(jetCorrPtSmear   <=  200)                                           continue;
     if(fabs(pVJet->eta) >=  2.5)                                           continue;
     if(!passJetTightSel(pVJet))                                            continue;
+    if(fLooseVJets.size()>0) continue;//keep only the leading jet
 
     addJet(pVJet,fLooseVJets);
     lCount++;
@@ -268,16 +269,16 @@ void VJetLoader::selectVJets(std::vector<TLorentzVector> &iElectrons, std::vecto
     if(!passJetTightLepVetoSel(pVJet))                                     continue;
     lCountT++;
   }
-  addVJet(fLooseVJets,selectedVJets);
-
-  for  (int i0 = 0; i0 < int(selectedVJets.size()); i0++) { 
+  //addVJet(fLooseVJets,selectedVJets);
+   
+  for  (int i0 = 0; i0 < int(fLooseVJets.size()); i0++) { 
     if(passJetTightLepVetoSel(fLooseVJets[i0])) fisTightVJet[i0] = 1;
   }
   fNLooseVJets = lCount;
   fNTightVJets = lCountT;
 
   fillJetCorr( fN,fLooseVJets,fVars,iRho,runNum);
-  fillVJet(fN,fLooseVJets,fVars,iRho,runNum,iHWW);
+  fillVJet(fN,fLooseVJets,fVars,iRho,runNum,iHWW); 
 }
 void VJetLoader::fillJetCorr(int iN,std::vector<TJet*> &iObjects,std::vector<double> &iVals, double iRho, unsigned int runNum){ 
   int lMin = iObjects.size();

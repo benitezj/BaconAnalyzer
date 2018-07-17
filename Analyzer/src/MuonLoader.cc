@@ -18,7 +18,7 @@ MuonLoader::MuonLoader(TTree *iTree) {
 }
 MuonLoader::~MuonLoader() { 
   delete fMuons;
-  delete fMuonBr;
+  //delete fMuonBr;
 }
 void MuonLoader::reset() { 
   fNMuonsLoose = 0; 

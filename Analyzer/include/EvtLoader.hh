@@ -41,11 +41,11 @@ public:
   bool         PV();
   //EWK and kFactor
   void computeCorr(float iPt,
-		   std::string iHist0,
-		   std::string iHist1,
-		   std::string iHist2,
-		   std::string iNLO,
-                   std::string ikfactor="${CMSSW_BASE}/src/BaconAnalyzer/Analyzer/data/kfactors.root");
+		 std::string iHist0,
+		 std::string iHist1,
+		 std::string iHist2,
+		 std::string iNLO,
+		 std::string ikfactor="${CMSSW_BASE}/src/BaconAnalyzer/Analyzer/data/kfactors.root");
   //MET and mT
   void         fillRecoil(std::vector<TLorentzVector> &iVecCorr,std::vector<TLorentzVector> iPhotons);
   void         fillmT(float iMet, float iMetPhi,float iFMet, float iFMetPhi, std::vector<TLorentzVector> &lCorr, float &fmT);

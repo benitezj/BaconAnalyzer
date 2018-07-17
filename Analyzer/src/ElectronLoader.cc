@@ -18,7 +18,7 @@ ElectronLoader::ElectronLoader(TTree *iTree){
 }
 ElectronLoader::~ElectronLoader() { 
   delete fElectrons;
-  delete fElectronBr;
+  //delete fElectronBr;
 }
 void ElectronLoader::reset() { 
   fNElectronsLoose = 0; 

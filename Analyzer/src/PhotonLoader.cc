@@ -13,7 +13,7 @@ PhotonLoader::PhotonLoader(TTree *iTree) {
 }
 PhotonLoader::~PhotonLoader() { 
   delete fPhotons;
-  delete fPhotonBr;
+  //delete fPhotonBr;
 }
 void PhotonLoader::reset() { 
   fNPhotonsLoose  = 0; 

@@ -24,7 +24,7 @@ JetLoader::JetLoader(TTree *iTree, bool iData) {
 }
 JetLoader::~JetLoader() { 
   delete fJets;
-  delete fJetBr;
+  //delete fJetBr;
   //delete fJetsCHS;
   //delete fJetBrCHS;
 }
@@ -197,7 +197,7 @@ void JetLoader::selectJets(std::vector<TLorentzVector> &iElectrons, std::vector<
   reset(); 
   int lCountPt30 = 0, lNFwdPt30 = 0, lNBTagLPt30 = 0,lNBTagMPt30 = 0, lNBTagTPt30 = 0;
   int lCountPt30jesUp = 0, lCountPt30jesDown = 0, lCountPt30jerUp = 0, lCountPt30jerDown = 0;
-  
+  //std::cout<<"JetLoader::selectJets iVJets.size "<<iVJets.size()<<"/"<<fNJetsPt30dR08.size()<<std::endl;
   for (int i1 = 0; i1 < int(iVJets.size()); i1++) {
     fNJetsPt30dR08[i1] = 0;
     fNJetsPt30dR08jesUp[i1] = 0;

@@ -24,19 +24,25 @@ EvtLoader::EvtLoader(TChain *iTree,std::string iName,std::string iHLTFile,std::s
   fVertices = new TClonesArray("baconhep::TVertex");
   iTree->SetBranchAddress("PV",       &fVertices);
   //fVertexBr     = iTree->GetBranch("PV");
-  
-  TFile *lFile = TFile::Open(iPUWeight.c_str()); 
-  fPUWeightHist =  (TH1F*) lFile->Get("puw");
+
+
+  TFile lFile(iPUWeight.c_str(),"READ"); 
+  fPUWeightHist =  (TH1F*) lFile.Get("puw");
+  if(!fPUWeightHist){
+    std::cout<<"No fPUWeightHist"<<std::endl;
+  }
+  fPUWeightHist=(TH1F*)fPUWeightHist->Clone("fPUWeightHist");
   fPUWeightHist->SetDirectory(0);
-  lFile->Close();
+
   fSample = (char*) (iName.c_str());
 
+  fHist0=NULL;
+  fHist2=NULL;
 }
 EvtLoader::~EvtLoader() { 
   delete  fEvt;
-  delete  fEvtBr;
+  delete fTrigger;
   delete  fVertices;
-  delete  fVertexBr;
 }
 void EvtLoader::reset() { 
   fEvtV         = 0; 
@@ -96,7 +102,7 @@ void EvtLoader::load(int iEvent) {
   fVertices ->Clear(); 
   //fEvtBr    ->GetEntry(iEvent);
   //fVertexBr ->GetEntry(iEvent);
-  fTrigString.clear(); 
+  //fTrigString.clear(); 
   fRun   = fEvt->runNum; 
   fLumi  = fEvt->lumiSec;
   fPu    = fEvt->nPUmean;
@@ -192,21 +198,24 @@ void  EvtLoader::fillmT(float iMet, float iMetPhi,float iFMet, float iFMetPhi, s
   }
 }
 // kFactor and EWK
-void EvtLoader::computeCorr(float iPt,std::string iHist0,std::string iHist1,std::string iHist2,std::string iNLO,std::string ikfactor){
-  std::string isuffix = "";
-  if(iNLO.find("G")!=std::string::npos) isuffix ="_G";
+void EvtLoader::computeCorr(float iPt, std::string iHist0,std::string iHist1,std::string iHist2,std::string iNLO,std::string ikfactor){
 
-  TFile *lFile = TFile::Open(ikfactor.c_str());
-  fHist0 =  (TH1F*) lFile->Get(iHist0.c_str()); // NLO
-  fHist0->SetDirectory(0);
-  fHist1 =  (TH1F*) lFile->Get(iHist1.c_str()); // LO
-  fHist1->SetDirectory(0);
-  fHist2 =  (TH1F*) lFile->Get(iHist2.c_str()); // NLO*EWK
-  fHist2->SetDirectory(0);
-  lFile->Close();
-
-  fHist2->Divide(fHist1);
-  fHist0->Divide(fHist1);
+  if(!fHist0||!fHist2){
+    //setup on first event
+    TFile lFile(ikfactor.c_str(),"READ");
+    fHist0 =  (TH1F*) lFile.Get(iHist0.c_str()); // NLO
+    fHist1 =  (TH1F*) lFile.Get(iHist1.c_str()); // LO
+    fHist2 =  (TH1F*) lFile.Get(iHist2.c_str()); // NLO*EWK
+    if(!fHist0||!fHist1||!fHist2){
+      std::cout<<"EvtLoader::computeCorr , histograms not found"<<std::endl;
+    }  
+    fHist0=(TH1F*)fHist0->Clone("Hist0");
+    fHist2=(TH1F*)fHist2->Clone("Hist2");
+    fHist0->SetDirectory(0);
+    fHist2->SetDirectory(0);
+    fHist0->Divide(fHist1);
+    fHist2->Divide(fHist1);
+  }
 
   fkFactor_CENT = Float_t(fHist0->GetBinContent(fHist0->FindBin(iPt)));
   //if(iPt > 700) fkFactor_CENT = Float_t(fHist0->GetBinContent(fHist0->FindBin(700)));

@@ -12,7 +12,7 @@ TauLoader::TauLoader(TTree *iTree) {
 }
 TauLoader::~TauLoader() { 
   delete fTaus;
-  delete fTauBr;
+  //delete fTauBr;
 }
 void TauLoader::reset() { 
   fNTaus = 0; 

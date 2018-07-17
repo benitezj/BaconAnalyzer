@@ -19,10 +19,7 @@ GenLoader::GenLoader(TTree *iTree) {
 }
 GenLoader::~GenLoader() { 
   delete fGenInfo;
-  delete fGenInfoBr;
-
   delete fGens;
-  delete fGenBr;
 }
 void GenLoader::reset() { 
   fBosonPt  = -1;
@@ -121,7 +118,7 @@ void GenLoader::setupTreeHiggs(TTree *iTree) {
 }
 void GenLoader::load(int iEvent) { 
   reset();
-  fGens     ->Clear();
+  //fGens     ->Clear();
   //fGenBr    ->GetEntry(iEvent);
   //fGenInfoBr->GetEntry(iEvent);
 
