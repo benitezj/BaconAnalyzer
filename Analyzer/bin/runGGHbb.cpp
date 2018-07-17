@@ -24,6 +24,38 @@
 const float PTCUT = 400;
 
 
+
+#include "stdlib.h"
+#include "stdio.h"
+#include "string.h"
+
+int parseLine(char* line){
+  // This assumes that a digit will be found and the line ends in " Kb".
+  int i = strlen(line);
+  const char* p = line;
+  while (*p <'0' || *p > '9') p++;
+  line[i-3] = '\0';
+  i = atoi(p);
+  return i;
+}
+
+int getValue(){ //Note: this value is in KB!
+  FILE* file = fopen("/proc/self/status", "r");
+  int result = -1;
+  char line[128];
+
+  while (fgets(line, 128, file) != NULL){
+    if (strncmp(line, "VmSize:", 7) == 0){
+      result = parseLine(line);
+      break;
+    }
+  }
+  fclose(file);
+  return result;
+}
+
+
+
 TChain* loadChain(std::string inputFile, unsigned int firstfile, unsigned int lastfile) { 
 
   std::ifstream infile(inputFile.c_str());
@@ -105,7 +137,9 @@ int main( int argc, char **argv ) {
   EvtLoader       fEvt(lTree,lName); 
   MuonLoader      fMuon(lTree); 
   ElectronLoader  fElectron(lTree); 
+  TauLoader  fTau(lTree);          
   PhotonLoader    fPhoton(lTree); 
+  JetLoader     fJet4(lTree, isData);  
   VJetLoader      fVJet8(lTree,"AK8Puppi","AddAK8Puppi",3, isData);
   //VJetLoader      fVJet15(lTree,"CA15Puppi","AddCA15Puppi",3, isData);
   
@@ -127,10 +161,12 @@ int main( int argc, char **argv ) {
   fVJet8.setupTreeZprime(&lOut,"AK8Puppijet");
   //fVJet15.setupTree(&lOut,"CA15Puppijet");
   //fVJet15.setupTreeZprime(&lOut,"CA15Puppijet");
+  fJet4.setupTree(&lOut,"AK4Puppijet");
   fMuon.setupTree(&lOut); 
   fElectron.setupTree(&lOut); 
+  fTau.setupTree(&lOut); 
   fPhoton.setupTree(&lOut); 
-  fGen.setupTree (&lOut,1.);
+  if(!isData)fGen.setupTree (&lOut,1.);
 
   //Add the triggers we want
   fEvt.addTrigger("HLT_AK8PFHT700_TrimR0p1PT0p03Mass50_v*");
@@ -183,17 +219,20 @@ int main( int argc, char **argv ) {
   int neventstest = 0;
   unsigned int totalEvents = lTree->GetEntries();
   for(unsigned int i0 = 0; i0 < totalEvents; i0++) {
-    if (i0%1000 == 0) std::cout << i0 <<"/"<<totalEvents<< " events processed ,"<<neventstest<< std::endl;
+    //if(i0<115000) continue;
+    if (i0%1000 == 0) std::cout << i0 <<"/"<<totalEvents<< " events processed , "<<neventstest<<" , mem="<< getValue()<< std::endl;
 
     ///load all branches
     fEvt.load(i0);
     if(!isData) fGen.load(i0);
     fMuon.load(i0);
     fElectron.load(i0);
+    fTau.load(i0);
     fPhoton.load(i0);
     //fVJet15.load(i0);
     fVJet8.load(i0);
- 
+    fJet4.load(i0); 
+
     lTree->GetEntry(i0);
  
 
@@ -221,6 +260,10 @@ int main( int argc, char **argv ) {
     ///Save the initial sum of weights
     NEvents.SetBinContent(1, NEvents.GetBinContent(1)+lWeight);
     SumWeights.Fill(1.0, lWeight);
+
+
+    /// apply json otherwise some jetEC give errors creating large log files
+    if(!passJson) continue;
 
  
     // Triggerbits
@@ -294,6 +337,7 @@ int main( int argc, char **argv ) {
     fElectron.selectElectrons(fEvt.fRho,fEvt.fMet,cleaningElectrons);
     fPhoton.selectPhotons(fEvt.fRho,cleaningElectrons,cleaningPhotons);
 
+    fTau.selectTaus(cleaningElectrons, cleaningMuons);
 
     // CA15Puppi Jets
     //fVJet15.selectVJets(cleaningElectrons,cleaningMuons,cleaningPhotons,1.5,fEvt.fRho,fEvt.fRun);
@@ -306,6 +350,7 @@ int main( int argc, char **argv ) {
     // Match leading AK8 Puppi jet with CA15 Puppi jet within dR = 0.4 (to get pT ratio)
     //if(fVJet8.selectedVJets.size()>0) fVJet8 .matchJet15(fVJet15.selectedVJets,fVJet8.selectedVJets[0],0.4);
     
+
     
     // Select at least one AK8 or one CA15 jet
     if(!(fEvt.fselectBits & 2))continue;
@@ -317,6 +362,10 @@ int main( int argc, char **argv ) {
     if(fVJet8.fLooseVJets.size()>0) 
       vJet8.SetPtEtaPhiM(fVJet8.fLooseVJets[0]->pt,fVJet8.fLooseVJets[0]->eta,fVJet8.fLooseVJets[0]->phi,fVJet8.fLooseVJets[0]->mass);
 
+    std::vector<TLorentzVector> vJet8List;
+    vJet8List.push_back(vJet8);
+
+
     // TLorentzVector vJet15;
     // if(fVJet15.fLooseVJets.size()>0) 
     //   vJet15.SetPtEtaPhiM(fVJet15.fLooseVJets[0]->pt,fVJet15.fLooseVJets[0]->eta,fVJet15.fLooseVJets[0]->phi,fVJet15.fLooseVJets[0]->mass);
@@ -325,6 +374,8 @@ int main( int argc, char **argv ) {
     // vJet15List.push_back(vJet15);
     // if(fVJet8.fLooseVJets.size()>0) fVJet8.matchJet15(vJet15List,vJet8,0.4);
     
+
+    fJet4.selectJets(cleaningElectrons,cleaningMuons,cleaningPhotons,vJet8List,fEvt.fRho,fEvt.fRun);
 
 
     // truth match
